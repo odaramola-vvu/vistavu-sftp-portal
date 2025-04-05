@@ -47,8 +47,11 @@ const FileManager = () => {
       const uploadUrl = data.upload_url;
 
       await fetch(uploadUrl, {
-        method: "PUT",
-        body: uploadFile,
+  method: "PUT",
+  body: uploadFile,
+  headers: {
+    "Content-Type": uploadFile.type, // required by S3
+  },
       });
 
       setUploadFile(null);
