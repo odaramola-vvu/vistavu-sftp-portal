@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 
-const API_URL = "https://4l8tttgqqj.execute-api.us-west-2.amazonaws.com/dev/generate-presigned-url";
-
-// TEMP: Hardcoded test user for now
-const TEST_USERNAME = "test-user";
+const API_URL = "/api/generate-presigned-url"; // 👈 Now uses proxy path
 
 const FileManager = () => {
   const [files, setFiles] = useState([]);
   const [uploadFile, setUploadFile] = useState(null);
+
+  // TEMP: Hardcoded username for testing (remove once login is connected)
+  const username = "test-user";
 
   useEffect(() => {
     fetchFileList();
@@ -17,13 +17,8 @@ const FileManager = () => {
     try {
       const response = await fetch(API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          action: "list",
-          username: TEST_USERNAME
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "list", username }),
       });
 
       const data = await response.json();
@@ -43,9 +38,9 @@ const FileManager = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "upload",
-          username: TEST_USERNAME,
-          filename: uploadFile.name
-        })
+          username,
+          filename: uploadFile.name,
+        }),
       });
 
       const data = await response.json();
@@ -53,11 +48,11 @@ const FileManager = () => {
 
       await fetch(uploadUrl, {
         method: "PUT",
-        body: uploadFile
+        body: uploadFile,
       });
 
       setUploadFile(null);
-      fetchFileList();
+      fetchFileList(); // Refresh list
     } catch (error) {
       console.error("❌ Upload failed:", error);
     }
@@ -70,9 +65,9 @@ const FileManager = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "download",
-          username: TEST_USERNAME,
-          filename
-        })
+          username,
+          filename,
+        }),
       });
 
       const data = await response.json();
