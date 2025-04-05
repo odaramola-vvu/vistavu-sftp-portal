@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 
-const API_URL = "/api/generate-presigned-url"; // 👈 Now uses proxy path
+const API_URL = "/api/generate-presigned-url"; // Proxy path via Amplify
 
 const FileManager = () => {
   const [files, setFiles] = useState([]);
-  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadFiles, setUploadFiles] = useState([]);
 
-  // TEMP: Hardcoded username for testing (remove once login is connected)
-  const username = "test-user";
+  const username = "test-user"; // TEMP: hardcoded for POC
 
   useEffect(() => {
     fetchFileList();
@@ -30,39 +29,37 @@ const FileManager = () => {
   };
 
   const handleFileUpload = async () => {
-  if (!uploadFile) return;
+    if (!uploadFiles.length) return;
 
-  try {
-    // Step 1: Request presigned URL from Lambda
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "upload",
-        username,
-        filename: uploadFile.name,
-        content_type: uploadFile.type, // ✅ MATCHING content-type
-      }),
-    });
+    for (const file of uploadFiles) {
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "upload",
+            username,
+            filename: file.name,
+          }),
+        });
 
-    const data = await response.json();
-    const uploadUrl = data.upload_url;
+        const data = await response.json();
+        const uploadUrl = data.upload_url;
 
-    // Step 2: PUT file to S3 using the exact same content type
-    await fetch(uploadUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": uploadFile.type, // ✅ MATCH signature
-      },
-      body: uploadFile,
-    });
+        await fetch(uploadUrl, {
+          method: "PUT",
+          body: file,
+        });
 
-    setUploadFile(null);
-    fetchFileList(); // Refresh list after upload
-  } catch (error) {
-    console.error("❌ Upload failed:", error);
-  }
-};
+        console.log(`✅ Uploaded: ${file.name}`);
+      } catch (error) {
+        console.error(`❌ Failed to upload ${file.name}:`, error);
+      }
+    }
+
+    setUploadFiles([]);
+    fetchFileList();
+  };
 
   const handleFileDownload = async (filename) => {
     try {
@@ -77,7 +74,10 @@ const FileManager = () => {
       });
 
       const data = await response.json();
-      window.open(data.download_url, "_blank");
+      const link = document.createElement("a");
+      link.href = data.download_url;
+      link.download = filename;
+      link.click();
     } catch (error) {
       console.error("❌ Download failed:", error);
     }
@@ -87,7 +87,11 @@ const FileManager = () => {
     <div>
       <h2>📁 File Manager</h2>
 
-      <input type="file" onChange={(e) => setUploadFile(e.target.files[0])} />
+      <input
+        type="file"
+        multiple
+        onChange={(e) => setUploadFiles([...e.target.files])}
+      />
       <button onClick={handleFileUpload}>Upload</button>
 
       <ul>
