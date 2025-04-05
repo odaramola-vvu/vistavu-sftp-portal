@@ -30,36 +30,39 @@ const FileManager = () => {
   };
 
   const handleFileUpload = async () => {
-    if (!uploadFile) return;
+  if (!uploadFile) return;
 
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "upload",
-          username,
-          filename: uploadFile.name,
-        }),
-      });
+  try {
+    // Step 1: Request presigned URL from Lambda
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "upload",
+        username,
+        filename: uploadFile.name,
+        content_type: uploadFile.type, // ✅ MATCHING content-type
+      }),
+    });
 
-      const data = await response.json();
-      const uploadUrl = data.upload_url;
+    const data = await response.json();
+    const uploadUrl = data.upload_url;
 
-      await fetch(uploadUrl, {
-  method: "PUT",
-  body: uploadFile,
-  headers: {
-    "Content-Type": uploadFile.type, // required by S3
-  },
-      });
+    // Step 2: PUT file to S3 using the exact same content type
+    await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": uploadFile.type, // ✅ MATCH signature
+      },
+      body: uploadFile,
+    });
 
-      setUploadFile(null);
-      fetchFileList(); // Refresh list
-    } catch (error) {
-      console.error("❌ Upload failed:", error);
-    }
-  };
+    setUploadFile(null);
+    fetchFileList(); // Refresh list after upload
+  } catch (error) {
+    console.error("❌ Upload failed:", error);
+  }
+};
 
   const handleFileDownload = async (filename) => {
     try {
