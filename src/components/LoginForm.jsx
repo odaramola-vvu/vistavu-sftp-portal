@@ -1,3 +1,4 @@
+// ✅ LoginForm.jsx
 import React, { useState } from "react";
 import { Auth } from "aws-amplify";
 import { useNavigate } from "react-router-dom";
@@ -14,58 +15,58 @@ const LoginForm = () => {
 
     try {
       const user = await Auth.signIn(username, password);
+      console.log("✅ Logged in:", user);
+
       const session = await Auth.currentSession();
-      const token = session.getIdToken().getJwtToken();
+      const idToken = session.getIdToken().getJwtToken();
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("username", username); // Save for file actions
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("username", user.getUsername());
+      localStorage.setItem("token", idToken);
 
-      // ✅ Call /check-admin to see if user is admin
+      // ✅ Call backend to check if user is admin
       const response = await fetch("/api/check-admin", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
+          Authorization: idToken,
         },
-        body: JSON.stringify({ username }),
       });
 
-      const data = await response.json();
+      const result = await response.json();
+      const isAdmin = result?.isAdmin === true;
 
-      const isAdmin = data?.isAdmin === true;
       localStorage.setItem("isAdmin", isAdmin);
 
+      // ✅ Redirect
       if (isAdmin) {
         navigate("/admin-dashboard");
       } else {
         navigate("/file-manager");
       }
     } catch (err) {
-      console.error("Login error", err);
-      setError("Login failed. Please check your credentials.");
+      console.error("❌ Login failed:", err);
+      setError("Invalid username or password");
     }
   };
 
   return (
-    <div>
+    <form onSubmit={handleLogin}>
       <h2>🔐 Login</h2>
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button type="submit">Login</button>
       {error && <p style={{ color: "red" }}>{error}</p>}
-      <form onSubmit={handleLogin}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        /><br />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        /><br />
-        <button type="submit">Login</button>
-      </form>
-    </div>
+    </form>
   );
 };
 

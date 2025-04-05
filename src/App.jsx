@@ -1,15 +1,29 @@
+// ✅ App.jsx
 import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import LoginForm from "./components/LoginForm";
 import FileManager from "./components/FileManager";
+import AdminDashboard from "./components/AdminDashboard"; // 🔜 create later
 
 const App = () => {
-  // 🔧 Hardcode test user to skip login redirect
-  localStorage.setItem("username", "test-user");
+  const isAuthenticated = localStorage.getItem("isLoggedIn") === "true";
+  const isAdmin = localStorage.getItem("isAdmin") === "true";
 
   return (
-    <div className="App">
-      <h1>🔐 Bypassed Login Mode (test-user)</h1>
-      <FileManager />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginForm />} />
+        <Route
+          path="/file-manager"
+          element={isAuthenticated ? <FileManager /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/admin-dashboard"
+          element={isAdmin ? <AdminDashboard /> : <Navigate to="/file-manager" />}
+        />
+        <Route path="/" element={<Navigate to="/login" />} />
+      </Routes>
+    </Router>
   );
 };
 
