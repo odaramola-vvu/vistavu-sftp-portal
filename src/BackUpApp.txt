@@ -1,0 +1,19 @@
+import React, { useState } from 'react';
+import LoginForm from './components/LoginForm';
+
+function App() {
+  const [user, setUser] = useState(null);
+
+  return (
+    <div>
+      <h1>Admin Portal: Shared Folder Access</h1>
+      {!user ? (
+        <LoginForm onLogin={setUser} />
+      ) : (
+        <p>✅ Logged in as {user.username}</p>
+      )}
+    </div>
+  );
+}
+
+export default App;

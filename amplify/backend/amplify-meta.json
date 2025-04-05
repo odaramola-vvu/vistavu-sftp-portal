@@ -1,0 +1,15 @@
+{
+  "providers": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-vistavusftpportal-dev-1bb12-authRole",
+      "UnauthRoleArn": "arn:aws:iam::952906072811:role/amplify-vistavusftpportal-dev-1bb12-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::952906072811:role/amplify-vistavusftpportal-dev-1bb12-authRole",
+      "Region": "us-west-2",
+      "DeploymentBucketName": "amplify-vistavusftpportal-dev-1bb12-deployment",
+      "UnauthRoleName": "amplify-vistavusftpportal-dev-1bb12-unauthRole",
+      "StackName": "amplify-vistavusftpportal-dev-1bb12",
+      "StackId": "arn:aws:cloudformation:us-west-2:952906072811:stack/amplify-vistavusftpportal-dev-1bb12/0d3d53b0-11ae-11f0-b6c5-06e35a323bd5",
+      "AmplifyAppId": "d27akopt75h5yz"
+    }
+  }
+}
