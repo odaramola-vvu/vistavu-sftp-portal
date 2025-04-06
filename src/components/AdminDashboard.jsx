@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function AdminDashboard() {
   const navigate = useNavigate();
 
   const username = localStorage.getItem('username') || 'Admin';
+
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [showUserList, setShowUserList] = useState(false);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -13,6 +17,32 @@ function AdminDashboard() {
 
   const goTo = (path) => () => {
     navigate(path);
+  };
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    setUsers([]);
+    setShowUserList(false);
+
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const res = await fetch('/api/list-users', {
+        method: 'POST',
+        headers: {
+          Authorization: token
+        }
+      });
+
+      const data = await res.json();
+      console.log('👥 List users response:', data);
+
+      setUsers(data.users || []);
+      setShowUserList(true);
+    } catch (err) {
+      console.error('❌ Failed to fetch users:', err);
+    }
+
+    setLoadingUsers(false);
   };
 
   return (
@@ -30,7 +60,7 @@ function AdminDashboard() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <button
           onClick={goTo('/file-manager')}
           className="p-6 bg-blue-100 hover:bg-blue-200 rounded-xl shadow text-left"
@@ -54,7 +84,32 @@ function AdminDashboard() {
           <h2 className="text-xl font-semibold">👥 Manage Users</h2>
           <p className="text-gray-600 text-sm mt-1">Create, delete, and reset user passwords</p>
         </button>
+
+        <button
+          onClick={fetchUsers}
+          className="p-6 bg-purple-100 hover:bg-purple-200 rounded-xl shadow text-left"
+        >
+          <h2 className="text-xl font-semibold">📋 List Users</h2>
+          <p className="text-gray-600 text-sm mt-1">View all Cognito users</p>
+        </button>
       </div>
+
+      {loadingUsers && <p className="text-blue-500">Loading users...</p>}
+
+      {showUserList && (
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-300">
+          <h3 className="text-lg font-semibold mb-2">👥 User List</h3>
+          {users.length === 0 ? (
+            <p className="text-gray-600">No users found.</p>
+          ) : (
+            <ul className="list-disc list-inside space-y-1 text-gray-800">
+              {users.map((user) => (
+                <li key={user.Username}>{user.Username}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }
