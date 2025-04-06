@@ -1,30 +1,68 @@
-// ✅ App.jsx
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import LoginForm from "./components/LoginForm";
-import FileManager from "./components/FileManager";
-import AdminDashboard from "./components/AdminDashboard"; // 🔜 create later
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import LoginForm from './components/LoginForm';
+import FileManager from './components/FileManager';
+import SharedFolderAccessForm from './components/SharedFolderAccessForm'; // Optional
+import AdminDashboard from './components/AdminDashboard'; // Create this as needed
 
-const App = () => {
-  const isAuthenticated = localStorage.getItem("isLoggedIn") === "true";
-  const isAdmin = localStorage.getItem("isAdmin") === "true";
+function AuthRedirector() {
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+    const isAdmin = localStorage.getItem('isAdmin');
+
+    if (!token) {
+      navigate('/login');
+    } else if (isAdmin === 'true') {
+      navigate('/admin-dashboard');
+    } else {
+      navigate('/file-manager');
+    }
+  }, [navigate]);
+
+  return null;
+}
+
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem('jwtToken');
+  return token ? children : <Navigate to="/login" replace />;
+}
+
+function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<AuthRedirector />} />
         <Route path="/login" element={<LoginForm />} />
         <Route
           path="/file-manager"
-          element={isAuthenticated ? <FileManager /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <FileManager />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/admin-dashboard"
-          element={isAdmin ? <AdminDashboard /> : <Navigate to="/file-manager" />}
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
         />
-        <Route path="/" element={<Navigate to="/login" />} />
+        {/* Optional route for managing shared folder access */}
+        <Route
+          path="/shared-folder-access"
+          element={
+            <ProtectedRoute>
+              <SharedFolderAccessForm />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );
-};
+}
 
 export default App;
