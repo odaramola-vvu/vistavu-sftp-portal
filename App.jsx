@@ -1,22 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginForm from './components/LoginForm';
-import SharedFolderAccessForm from './components/SharedFolderAccessForm';
+import FileManager from './components/FileManager';
 
 function App() {
-  const [user, setUser] = useState(null);
+  const isAuthenticated = !!localStorage.getItem('token');
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Admin Portal: Shared Folder Access</h1>
-      {user ? (
-        <>
-          <p>✅ Logged in as {user.username}</p>
-          <SharedFolderAccessForm />
-        </>
-      ) : (
-        <LoginForm onLogin={setUser} />
-      )}
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/file-manager" element={isAuthenticated ? <FileManager /> : <Navigate to="/login" />} />
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/file-manager" : "/login"} />} />
+      </Routes>
+    </Router>
   );
 }
 

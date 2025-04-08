@@ -1,76 +1,50 @@
 import React, { useState } from 'react';
 import { Auth } from 'aws-amplify';
+import { useNavigate } from 'react-router-dom';
 
 function LoginForm() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-const handleLogin = async (e) => {
-  e.preventDefault();
-  setErrorMessage('');
-
-  try {
-    const user = await Auth.signIn(username, password);
-    console.log('✅ Logged in:', user);
-
-    const session = user.getSignInUserSession();
-    const token = session.getIdToken().getJwtToken();
-
-    localStorage.setItem('jwtToken', token);
-    localStorage.setItem('username', username);
-
-    console.log('🔐 Token stored, checking admin access...');
-
-    const res = await fetch('/api/check-admin', {
-      method: 'POST',
-      headers: {
-        Authorization: token
-      }
-    });
-
-    const data = await res.json();
-    console.log('👑 Admin check result:', data);
-
-    if (data.isAdmin) {
-      localStorage.setItem('isAdmin', 'true');
-      console.log('➡️ Redirecting to /admin-dashboard');
-      window.location.href = '/admin-dashboard';
-    } else {
-      localStorage.setItem('isAdmin', 'false');
-      console.log('➡️ Redirecting to /file-manager');
-      window.location.href = '/file-manager';
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const user = await Auth.signIn(username, password);
+      const token = user.signInUserSession.idToken.jwtToken;
+      localStorage.setItem('token', token);
+      localStorage.setItem('username', username);
+      navigate('/file-manager');
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Invalid credentials');
     }
-
-  } catch (err) {
-    console.error('❌ Login or admin check failed:', err);
-    setErrorMessage('Login failed. Check credentials or try again later.');
-  }
-};
+  };
 
   return (
-    <div className="max-w-sm mx-auto mt-20 bg-white p-6 rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
-      <form onSubmit={handleLogin} className="space-y-4">
+    <div className="flex items-center justify-center h-screen bg-gray-100">
+      <form onSubmit={handleLogin} className="bg-white p-8 rounded shadow-md w-80">
+        <h2 className="text-xl font-bold mb-4 text-center">Login</h2>
+        {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
         <input
-          className="w-full p-2 border rounded"
           type="text"
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          className="w-full mb-3 px-4 py-2 border rounded"
           required
         />
         <input
-          className="w-full p-2 border rounded"
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          className="w-full mb-4 px-4 py-2 border rounded"
           required
         />
-        {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
-        <button className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700" type="submit">
-          Sign In
+        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+          Login
         </button>
       </form>
     </div>
