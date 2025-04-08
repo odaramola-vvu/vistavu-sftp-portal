@@ -1,16 +1,9 @@
-// Trigger redeploy - fixing MIME error
-
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function AdminDashboard() {
   const navigate = useNavigate();
   const username = localStorage.getItem('username') || 'Admin';
-
-  const [users, setUsers] = useState([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [showUsers, setShowUsers] = useState(false);
-  const [error, setError] = useState('');
 
   const handleLogout = () => {
     localStorage.clear();
@@ -19,38 +12,6 @@ function AdminDashboard() {
 
   const goTo = (path) => () => {
     navigate(path);
-  };
-
-  const fetchUsers = async () => {
-    setLoadingUsers(true);
-    setError('');
-    setUsers([]);
-
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const res = await fetch('/api/list-users', {
-        method: 'POST',
-        headers: {
-          Authorization: token
-        }
-      });
-
-      const data = await res.json();
-      console.log('👥 List Users Response:', data);
-
-      if (!res.ok) {
-        setError(data.message || 'Failed to fetch users');
-        return;
-      }
-
-      setUsers(data.users || []);
-      setShowUsers(true);
-    } catch (err) {
-      console.error('❌ Error fetching users:', err);
-      setError('Unexpected error. Check console.');
-    } finally {
-      setLoadingUsers(false);
-    }
   };
 
   return (
@@ -70,7 +31,7 @@ function AdminDashboard() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <button
           onClick={goTo('/file-manager')}
           className="p-6 bg-blue-100 hover:bg-blue-200 rounded-xl shadow text-left"
@@ -94,33 +55,7 @@ function AdminDashboard() {
           <h2 className="text-xl font-semibold">👥 Manage Users</h2>
           <p className="text-gray-600 text-sm mt-1">Create, delete, and reset user passwords</p>
         </button>
-
-        <button
-          onClick={fetchUsers}
-          className="p-6 bg-purple-100 hover:bg-purple-200 rounded-xl shadow text-left"
-        >
-          <h2 className="text-xl font-semibold">📋 List Users</h2>
-          <p className="text-gray-600 text-sm mt-1">View all Cognito users</p>
-        </button>
       </div>
-
-      {loadingUsers && <p className="text-blue-600">Loading users...</p>}
-      {error && <p className="text-red-500">{error}</p>}
-
-      {showUsers && users.length > 0 && (
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-300">
-          <h3 className="text-lg font-semibold mb-2">👥 Cognito Users</h3>
-          <ul className="list-disc list-inside space-y-1 text-gray-800">
-            {users.map((user) => (
-              <li key={user.Username}>{user.Username}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {showUsers && users.length === 0 && !loadingUsers && (
-        <p className="text-gray-600">No users found.</p>
-      )}
     </div>
   );
 }
