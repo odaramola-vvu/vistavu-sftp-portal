@@ -1,3 +1,5 @@
+// Trigger redeploy - fixing MIME error
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
