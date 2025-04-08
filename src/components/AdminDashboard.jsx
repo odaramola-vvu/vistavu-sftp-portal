@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 function AdminDashboard() {
   const navigate = useNavigate();
+
   const username = localStorage.getItem('username') || 'Admin';
 
   const handleLogout = () => {
@@ -19,9 +20,7 @@ function AdminDashboard() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-blue-700">Admin Dashboard</h1>
-          <p className="text-sm text-gray-600">
-            Logged in as <span className="font-medium">{username}</span>
-          </p>
+          <p className="text-sm text-gray-600">Logged in as <span className="font-medium">{username}</span></p>
         </div>
         <button
           onClick={handleLogout}
